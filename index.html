@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Endpoint</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: white;
+            font-family: "ET Book", Palatino, "Palatino Linotype", "Palatino LT STD", "Book Antiqua", Georgia, serif;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .logo {
+            max-width: 280px;
+            width: 80%;
+            height: auto;
+        }
+        .contact {
+            color: #555;
+            font-size: 15px;
+            letter-spacing: 0.01em;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 1px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        .contact:hover {
+            color: #111;
+        }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <img src="/endpt.png" alt="Endpoint" class="logo">
+    </div>
+    <div class="contact" id="c" role="button" tabindex="0">discern, distill, deliver</div>
+
+    <script>
+    (function () {
+        var el = document.getElementById('c');
+        function reveal() {
+            var u = [105, 110, 113], d = [101, 110, 100, 112, 116], t = [99, 111, 109];
+            function s(a) { return a.map(function (n) { return String.fromCharCode(n); }).join(''); }
+            var addr = s(u) + String.fromCharCode(64) + s(d) + String.fromCharCode(46) + s(t);
+            var a = document.createElement('a');
+            a.href = String.fromCharCode(109, 97, 105, 108, 116, 111, 58) + addr;
+            a.textContent = addr;
+            el.textContent = '';
+            el.appendChild(a);
+            el.removeEventListener('click', reveal);
+            el.removeEventListener('keydown', key);
+        }
+        function key(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); reveal(); } }
+        el.addEventListener('click', reveal);
+        el.addEventListener('keydown', key);
+    })();
+    </script>
+</body>
+</html>
