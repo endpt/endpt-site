@@ -21,13 +21,22 @@
             font-family: "ET Book", Palatino, "Palatino Linotype", "Palatino LT STD", "Book Antiqua", Georgia, serif;
         }
         .logo-container {
-            text-align: center;
+            position: relative;
+            width: min(280px, 80vw);
+            height: calc(min(280px, 80vw) * 1359 / 1340);   /* explicit height: works on older iOS without aspect-ratio */
             margin-bottom: 40px;
         }
-        .logo {
-            max-width: 280px;
-            width: 80%;
+        .layer {
+            position: absolute;
+            left: 0; top: 0;
+            width: 100%;
             height: auto;
+            transform-origin: 0 0;
+        }
+        .letters {
+            position: absolute;
+            transform-origin: 0 0;
+            pointer-events: none;
         }
         .contact {
             color: #555;
@@ -38,18 +47,18 @@
             cursor: pointer;
             transition: color 0.3s ease;
         }
-        .contact:hover {
-            color: #111;
-        }
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
+        .contact:hover { color: #111; }
+        a { text-decoration: none; color: inherit; }
+        .js .logo-container, .js .contact { opacity: 0; }
     </style>
+    <script>document.documentElement.className = 'js';</script>
 </head>
 <body>
-    <div class="logo-container">
-        <img src="/endpt.png" alt="Endpoint" class="logo">
+    <div class="logo-container" id="stage" aria-label="Endpoint" role="img">
+        <img src="ring.png" alt="" class="layer" id="ring">
+        <img src="ring-thick.png" alt="" class="layer" id="ringThick">
+        <img src="sun.png" alt="" class="layer" id="sun">
+        <img src="letters.png" alt="" class="letters" id="letters">
     </div>
     <div class="contact" id="c" role="button" tabindex="0">discern, distill, deliver</div>
 
@@ -71,6 +80,55 @@
         function key(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); reveal(); } }
         el.addEventListener('click', reveal);
         el.addEventListener('keydown', key);
+    })();
+
+    (function () {
+        var G = {"canvas": [1340, 1359], "letters": [2316, 797], "ring": [1310, 265, 0.2127], "sun": [1310.0755, 90.3962, 0.3443]};
+        var stage = document.getElementById('stage'), contact = document.getElementById('c');
+        var ring = document.getElementById('ring'), thick = document.getElementById('ringThick');
+        var sun = document.getElementById('sun'), letters = document.getElementById('letters');
+        var imgs = [ring, thick, sun, letters];
+
+        function finalState() {
+            letters.style.display = 'none';
+            thick.style.opacity = 0;
+            stage.style.opacity = 1; contact.style.opacity = 1;
+        }
+
+        var still = !stage.animate ||
+            (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        if (still) { finalState(); return; }
+        var safety = setTimeout(finalState, 4500);   // never leave the page blank if images stall
+
+        Promise.all(imgs.map(function (i) { return i.decode ? i.decode().catch(function () {}) : Promise.resolve(); }))
+        .then(function () {
+            var cw = stage.clientWidth, ch = stage.clientHeight, f = cw / G.canvas[0];
+            var wd = Math.min(620, window.innerWidth * 0.86), g = wd / G.letters[0];
+            var lx = cw / 2 - wd / 2, ly = ch / 2 - (G.letters[1] * g) / 2;
+            letters.style.width = wd + 'px';
+            letters.style.left = lx + 'px';
+            letters.style.top = ly + 'px';
+            function start(tf) {        // where a full-canvas layer sits inside the wordmark
+                return 'translate(' + (lx + g * tf[0]) + 'px,' + (ly + g * tf[1]) + 'px) scale(' + (g * tf[2] / f) + ')';
+            }
+            var ease = 'cubic-bezier(.65,0,.35,1)';
+            var T = { hold: 750, fade: 300, move: 850, tag: 350 };   // hold: the name stays readable
+            var m0 = T.hold + 120;
+            [ring, thick].forEach(function (r) {
+                r.animate([{ transform: start(G.ring) }, { transform: 'none' }],
+                          { duration: T.move, delay: m0, easing: ease, fill: 'both' });
+            });
+            sun.animate([{ transform: start(G.sun) }, { transform: 'none' }],
+                        { duration: T.move, delay: m0, easing: ease, fill: 'both' });
+            thick.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T.move * 0.8, delay: m0, fill: 'both' });
+            letters.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T.fade, delay: T.hold, fill: 'both' });
+            stage.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, fill: 'both' });
+            var end = contact.animate([{ opacity: 0 }, { opacity: 1 }],
+                                      { duration: T.tag, delay: m0 + T.move - 150, fill: 'both' });
+            end.onfinish = function () {
+                clearTimeout(safety); finalState();
+            };
+        });
     })();
     </script>
 </body>
